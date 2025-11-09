@@ -26,3 +26,9 @@ Thumbs.db
 *.egg-info/
 dist/
 build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/

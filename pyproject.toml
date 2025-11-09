@@ -6,3 +6,21 @@ requires-python = ">=3.11"
 dependencies = [
     "pygame>=2.6.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--cov=games",
+    "--cov-report=term-missing",
+]

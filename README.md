@@ -74,6 +74,36 @@ Built with:
 - **pygame 2.6.1** - Game framework
 - **uv** - Fast Python package manager
 
+### Testing
+
+This project uses pytest for testing. Tests are located in the `tests/` directory.
+
+**Run all tests:**
+```bash
+uv run pytest
+```
+
+**Run tests with verbose output:**
+```bash
+uv run pytest -v
+```
+
+**Run specific test file:**
+```bash
+uv run pytest tests/test_snake_game.py
+```
+
+**Run tests with coverage report:**
+```bash
+uv run pytest --cov=games --cov-report=html
+```
+
+The test suite includes:
+- Base game abstract class tests
+- Individual game initialization and property tests
+- Game structure and import tests
+- Validation of the BaseGame interface implementation
+
 ## License
 
 MIT License - Feel free to use and modify!
