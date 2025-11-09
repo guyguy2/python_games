@@ -5,7 +5,16 @@ from abc import ABC, abstractmethod
 
 
 class BaseGame(ABC):
-    """Base class for all games"""
+    """
+    Base class for all games
+
+    Subclasses should define GAME_NAME and GAME_DESCRIPTION as class attributes
+    for metadata that can be accessed without instantiation.
+    """
+
+    # Class-level metadata (should be overridden by subclasses)
+    GAME_NAME: str = "Unknown Game"
+    GAME_DESCRIPTION: str = "No description available"
 
     @abstractmethod
     def __init__(self):
@@ -21,13 +30,11 @@ class BaseGame(ABC):
         pass
 
     @property
-    @abstractmethod
     def name(self) -> str:
         """Return the game name"""
-        pass
+        return self.GAME_NAME
 
     @property
-    @abstractmethod
     def description(self) -> str:
         """Return a short game description"""
-        pass
+        return self.GAME_DESCRIPTION
