@@ -8,6 +8,7 @@ import random
 import pygame
 
 from common.constants import BLACK, GREEN, RED, WHITE
+from common.high_scores import get_high_score_manager
 from common.ui import GameOverlay, ScoreDisplay
 from games.base_game import BaseGame
 
@@ -54,6 +55,7 @@ class SnakeGame(BaseGame):
         self.small_font: pygame.font.Font | None = None
         self.overlay: GameOverlay | None = None
         self.score_display: ScoreDisplay | None = None
+        self.high_score_manager = get_high_score_manager()
 
         # Game state
         self.snake: list[tuple[int, int]] = []
@@ -65,6 +67,8 @@ class SnakeGame(BaseGame):
         self.running: bool = True
         self.game_over: bool = False
         self.paused: bool = False
+        self.is_new_high_score: bool = False
+        self.score_saved: bool = False
 
     def initialize_display(self) -> None:
         """Initialize pygame display and fonts"""
@@ -86,6 +90,8 @@ class SnakeGame(BaseGame):
         self.game_over = False
         self.speed = self.INITIAL_SPEED
         self.food = self.spawn_food()
+        self.is_new_high_score = False
+        self.score_saved = False
 
     def spawn_food(self) -> tuple[int, int]:
         """Spawn food at random location not on snake"""
@@ -93,6 +99,14 @@ class SnakeGame(BaseGame):
             pos = (random.randint(0, self.GRID_WIDTH - 1), random.randint(0, self.GRID_HEIGHT - 1))
             if pos not in self.snake:
                 return pos
+
+    def save_high_score(self) -> None:
+        """Save the current score to high scores"""
+        if not self.score_saved:
+            self.is_new_high_score = self.high_score_manager.add_score(
+                self.GAME_NAME, self.score, length=len(self.snake)
+            )
+            self.score_saved = True
 
     def handle_input(self, event: pygame.event.Event) -> None:
         """Handle keyboard input"""
@@ -134,6 +148,7 @@ class SnakeGame(BaseGame):
         # Check collisions
         if self._check_collision(new_head):
             self.game_over = True
+            self.save_high_score()
             return
 
         # Add new head
@@ -217,11 +232,23 @@ class SnakeGame(BaseGame):
             length_text, (self.WINDOW_WIDTH - 150, self.GRID_HEIGHT * self.GRID_SIZE + 15)
         )
 
+        # Display high score
+        best_score = self.high_score_manager.get_best_score(self.GAME_NAME)
+        if best_score is not None:
+            high_score_text = self.small_font.render(
+                f"Best: {best_score}", True, self.TEXT_COLOR
+            )
+            self.screen.blit(high_score_text, (250, self.GRID_HEIGHT * self.GRID_SIZE + 15))
+
     def _draw_game_over(self) -> None:
         """Draw game over overlay"""
+        subtitle = f"Final Score: {self.score}"
+        if self.is_new_high_score:
+            subtitle += " - NEW HIGH SCORE!"
+
         self.overlay.draw_overlay(
             title="GAME OVER!",
-            subtitle=f"Final Score: {self.score}",
+            subtitle=subtitle,
             instructions="Press SPACE to restart or ESC to quit",
             title_color=self.GAME_OVER_COLOR,
             text_color=self.TEXT_COLOR,

@@ -9,6 +9,7 @@ import random
 import pygame
 
 from common.constants import BLACK, DEFAULT_FPS, RED, WHITE, YELLOW
+from common.high_scores import get_high_score_manager
 from common.ui import GameOverlay, ScoreDisplay
 from games.base_game import BaseGame
 
@@ -119,6 +120,7 @@ class ParatrooperGame(BaseGame):
         self.small_font: pygame.font.Font | None = None
         self.overlay: GameOverlay | None = None
         self.score_display: ScoreDisplay | None = None
+        self.high_score_manager = get_high_score_manager()
 
         # Game state
         self.turret_x: int = 0
@@ -139,6 +141,9 @@ class ParatrooperGame(BaseGame):
 
         self.running: bool = True
         self.game_over: bool = False
+        self.paused: bool = False
+        self.is_new_high_score: bool = False
+        self.score_saved: bool = False
 
     def initialize_display(self) -> None:
         """Initialize pygame display and fonts"""
@@ -169,6 +174,16 @@ class ParatrooperGame(BaseGame):
         self.helis_spawned = 0
         self.shoot_cooldown = 0
         self.game_over = False
+        self.is_new_high_score = False
+        self.score_saved = False
+
+    def save_high_score(self) -> None:
+        """Save the current score to high scores"""
+        if not self.score_saved:
+            self.is_new_high_score = self.high_score_manager.add_score(
+                self.GAME_NAME, self.score, wave=self.wave
+            )
+            self.score_saved = True
 
     def handle_input(self, event: pygame.event.Event) -> None:
         """Handle keyboard input"""
@@ -177,9 +192,11 @@ class ParatrooperGame(BaseGame):
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.running = False
+            elif event.key == pygame.K_p and not self.game_over:
+                self.paused = not self.paused
             elif self.game_over and event.key == pygame.K_SPACE:
                 self.reset_game_state()
-            elif event.key == pygame.K_SPACE and self.turret_alive and self.shoot_cooldown <= 0:
+            elif event.key == pygame.K_SPACE and self.turret_alive and self.shoot_cooldown <= 0 and not self.paused:
                 self._fire_bullet()
 
     def _fire_bullet(self) -> None:
@@ -191,7 +208,7 @@ class ParatrooperGame(BaseGame):
 
     def handle_turret_rotation(self, keys) -> None:
         """Handle turret rotation based on keyboard input"""
-        if not self.turret_alive:
+        if not self.turret_alive or self.paused:
             return
 
         if keys[pygame.K_LEFT]:
@@ -245,6 +262,7 @@ class ParatrooperGame(BaseGame):
             if para.y >= self.turret_y - 20:
                 self.turret_alive = False
                 self.game_over = True
+                self.save_high_score()
                 self.paratroopers.remove(para)
             elif para.y > self.WINDOW_HEIGHT:
                 self.paratroopers.remove(para)
@@ -331,6 +349,8 @@ class ParatrooperGame(BaseGame):
 
         if self.game_over:
             self._draw_game_over()
+        elif self.paused:
+            self._draw_pause_overlay()
 
     def _draw_ground(self) -> None:
         """Draw the ground"""
@@ -435,18 +455,40 @@ class ParatrooperGame(BaseGame):
         wave_text = self.small_font.render(f"Wave: {self.wave}", True, self.TEXT_COLOR)
         self.screen.blit(wave_text, (10, 50))
 
+        # Display high score
+        best_score = self.high_score_manager.get_best_score(self.GAME_NAME)
+        if best_score is not None:
+            high_score_text = self.small_font.render(
+                f"Best: {best_score}", True, self.TEXT_COLOR
+            )
+            self.screen.blit(high_score_text, (10, 80))
+
         controls_text = self.small_font.render(
-            "Left/Right: Aim | Space: Shoot | ESC: Quit", True, self.TEXT_COLOR
+            "Left/Right: Aim | Space: Shoot | P: Pause | ESC: Quit", True, self.TEXT_COLOR
         )
         self.screen.blit(controls_text, (self.WINDOW_WIDTH - 400, 10))
 
     def _draw_game_over(self) -> None:
         """Draw game over overlay"""
+        subtitle = f"Final Score: {self.score} | Waves: {self.wave - 1}"
+        if self.is_new_high_score:
+            subtitle += " - NEW HIGH SCORE!"
+
         self.overlay.draw_overlay(
             title="GAME OVER!",
-            subtitle=f"Final Score: {self.score} | Waves: {self.wave - 1}",
+            subtitle=subtitle,
             instructions="Press SPACE to restart or ESC to quit",
             title_color=self.GAME_OVER_COLOR,
+            text_color=BLACK,
+        )
+
+    def _draw_pause_overlay(self) -> None:
+        """Draw pause overlay"""
+        self.overlay.draw_overlay(
+            title="PAUSED",
+            subtitle=f"Score: {self.score} | Wave: {self.wave}",
+            instructions="Press P to resume or ESC to quit",
+            title_color=YELLOW,
             text_color=BLACK,
         )
 
@@ -460,7 +502,7 @@ class ParatrooperGame(BaseGame):
             for event in pygame.event.get():
                 self.handle_input(event)
 
-            if not self.game_over:
+            if not self.game_over and not self.paused:
                 # Handle turret rotation
                 keys = pygame.key.get_pressed()
                 self.handle_turret_rotation(keys)
