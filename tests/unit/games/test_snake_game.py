@@ -1,5 +1,5 @@
 """Tests for the Snake game"""
-import pytest
+
 from games.snake.game import SnakeGame
 
 
@@ -26,13 +26,14 @@ def test_snake_game_has_description():
 def test_snake_game_has_run_method():
     """Test that SnakeGame has a run method"""
     game = SnakeGame()
-    assert hasattr(game, 'run')
+    assert hasattr(game, "run")
     assert callable(game.run)
 
 
 def test_snake_game_inherits_from_base():
     """Test that SnakeGame inherits from BaseGame"""
     from games.base_game import BaseGame
+
     game = SnakeGame()
     assert isinstance(game, BaseGame)
 

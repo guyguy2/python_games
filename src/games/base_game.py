@@ -1,6 +1,7 @@
 """
 Base game class that all games should inherit from
 """
+
 from abc import ABC, abstractmethod
 
 

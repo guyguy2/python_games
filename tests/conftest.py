@@ -1,4 +1,5 @@
 """Pytest configuration for game tests"""
+
 import sys
 from pathlib import Path
 

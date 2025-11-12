@@ -1,8 +1,7 @@
 """Common constants for all games"""
-from typing import Tuple
 
 # Common colors
-Color = Tuple[int, int, int]
+Color = tuple[int, int, int]
 
 # UI Colors
 BLACK: Color = (0, 0, 0)

@@ -2,13 +2,15 @@
 Paratrooper Game
 Classic arcade game - defend your turret from paratroopers
 """
-import pygame
-import random
+
 import math
-from typing import List, Optional
-from games.base_game import BaseGame
-from common.constants import BLACK, WHITE, RED, YELLOW, DEFAULT_FPS
+import random
+
+import pygame
+
+from common.constants import BLACK, DEFAULT_FPS, RED, WHITE, YELLOW
 from common.ui import GameOverlay, ScoreDisplay
+from games.base_game import BaseGame
 
 
 class Helicopter:
@@ -111,12 +113,12 @@ class ParatrooperGame(BaseGame):
 
     def __init__(self):
         """Initialize the Paratrooper game"""
-        self.screen: Optional[pygame.Surface] = None
-        self.clock: Optional[pygame.time.Clock] = None
-        self.font: Optional[pygame.font.Font] = None
-        self.small_font: Optional[pygame.font.Font] = None
-        self.overlay: Optional[GameOverlay] = None
-        self.score_display: Optional[ScoreDisplay] = None
+        self.screen: pygame.Surface | None = None
+        self.clock: pygame.time.Clock | None = None
+        self.font: pygame.font.Font | None = None
+        self.small_font: pygame.font.Font | None = None
+        self.overlay: GameOverlay | None = None
+        self.score_display: ScoreDisplay | None = None
 
         # Game state
         self.turret_x: int = 0
@@ -124,9 +126,9 @@ class ParatrooperGame(BaseGame):
         self.turret_angle: float = 0.0
         self.turret_alive: bool = True
 
-        self.helicopters: List[Helicopter] = []
-        self.paratroopers: List[Paratrooper] = []
-        self.bullets: List[Bullet] = []
+        self.helicopters: list[Helicopter] = []
+        self.paratroopers: list[Paratrooper] = []
+        self.bullets: list[Bullet] = []
 
         self.score: int = 0
         self.wave: int = 1
@@ -256,8 +258,12 @@ class ParatrooperGame(BaseGame):
             bullet.update()
 
             # Remove if off screen
-            if (bullet.x < 0 or bullet.x > self.WINDOW_WIDTH or
-                bullet.y < 0 or bullet.y > self.WINDOW_HEIGHT):
+            if (
+                bullet.x < 0
+                or bullet.x > self.WINDOW_WIDTH
+                or bullet.y < 0
+                or bullet.y > self.WINDOW_HEIGHT
+            ):
                 self.bullets.remove(bullet)
                 continue
 
@@ -273,8 +279,10 @@ class ParatrooperGame(BaseGame):
         for heli in self.helicopters:
             if not heli.alive:
                 continue
-            if (abs(bullet.x - heli.x) < heli.width // 2 and
-                abs(bullet.y - heli.y) < heli.height // 2):
+            if (
+                abs(bullet.x - heli.x) < heli.width // 2
+                and abs(bullet.y - heli.y) < heli.height // 2
+            ):
                 heli.alive = False
                 bullet.alive = False
                 self.score += self.HELI_SCORE
@@ -290,8 +298,7 @@ class ParatrooperGame(BaseGame):
         for para in self.paratroopers:
             if not para.alive:
                 continue
-            if (abs(bullet.x - para.x) < para.width and
-                abs(bullet.y - para.y) < para.height):
+            if abs(bullet.x - para.x) < para.width and abs(bullet.y - para.y) < para.height:
                 para.alive = False
                 bullet.alive = False
                 self.score += self.PARA_SCORE
@@ -300,11 +307,15 @@ class ParatrooperGame(BaseGame):
 
     def check_wave_completion(self) -> None:
         """Check if wave is complete and advance to next wave"""
-        if (self.helis_spawned >= self.wave_helicopters and
-            len(self.helicopters) == 0 and
-            len(self.paratroopers) == 0):
+        if (
+            self.helis_spawned >= self.wave_helicopters
+            and len(self.helicopters) == 0
+            and len(self.paratroopers) == 0
+        ):
             self.wave += 1
-            self.wave_helicopters = min(self.INITIAL_WAVE_HELICOPTERS + self.wave, self.MAX_WAVE_HELICOPTERS)
+            self.wave_helicopters = min(
+                self.INITIAL_WAVE_HELICOPTERS + self.wave, self.MAX_WAVE_HELICOPTERS
+            )
             self.helis_spawned = 0
             self.spawn_timer = 60
 
@@ -324,8 +335,9 @@ class ParatrooperGame(BaseGame):
     def _draw_ground(self) -> None:
         """Draw the ground"""
         pygame.draw.rect(
-            self.screen, self.GROUND_COLOR,
-            (0, self.WINDOW_HEIGHT - self.GROUND_HEIGHT, self.WINDOW_WIDTH, self.GROUND_HEIGHT)
+            self.screen,
+            self.GROUND_COLOR,
+            (0, self.WINDOW_HEIGHT - self.GROUND_HEIGHT, self.WINDOW_WIDTH, self.GROUND_HEIGHT),
         )
 
     def _draw_turret(self) -> None:
@@ -338,22 +350,28 @@ class ParatrooperGame(BaseGame):
             barrel_end_x = self.turret_x + math.cos(self.turret_angle) * self.BARREL_LENGTH
             barrel_end_y = self.turret_y + math.sin(self.turret_angle) * self.BARREL_LENGTH
             pygame.draw.line(
-                self.screen, self.TURRET_COLOR,
+                self.screen,
+                self.TURRET_COLOR,
                 (self.turret_x, self.turret_y),
-                (barrel_end_x, barrel_end_y), 6
+                (barrel_end_x, barrel_end_y),
+                6,
             )
         else:
             # Draw destroyed turret
             pygame.draw.circle(self.screen, (100, 100, 100), (self.turret_x, self.turret_y), 20)
             pygame.draw.line(
-                self.screen, RED,
+                self.screen,
+                RED,
                 (self.turret_x - 15, self.turret_y - 15),
-                (self.turret_x + 15, self.turret_y + 15), 3
+                (self.turret_x + 15, self.turret_y + 15),
+                3,
             )
             pygame.draw.line(
-                self.screen, RED,
+                self.screen,
+                RED,
                 (self.turret_x - 15, self.turret_y + 15),
-                (self.turret_x + 15, self.turret_y - 15), 3
+                (self.turret_x + 15, self.turret_y - 15),
+                3,
             )
 
     def _draw_helicopters(self) -> None:
@@ -363,15 +381,13 @@ class ParatrooperGame(BaseGame):
                 continue
             # Body
             rect = pygame.Rect(
-                heli.x - heli.width // 2, heli.y - heli.height // 2,
-                heli.width, heli.height
+                heli.x - heli.width // 2, heli.y - heli.height // 2, heli.width, heli.height
             )
             pygame.draw.ellipse(self.screen, self.HELI_COLOR, rect)
             # Rotor
             rotor_y = heli.y - heli.height // 2 - 5
             pygame.draw.line(
-                self.screen, (50, 50, 50),
-                (heli.x - 20, rotor_y), (heli.x + 20, rotor_y), 2
+                self.screen, (50, 50, 50), (heli.x - 20, rotor_y), (heli.x + 20, rotor_y), 2
             )
 
     def _draw_paratroopers(self) -> None:
@@ -387,41 +403,40 @@ class ParatrooperGame(BaseGame):
                     (para.x - 15, para.y - 5),
                     (para.x - 10, para.y),
                     (para.x + 10, para.y),
-                    (para.x + 15, para.y - 5)
+                    (para.x + 15, para.y - 5),
                 ]
                 pygame.draw.polygon(self.screen, self.PARACHUTE_COLOR, chute_points)
                 pygame.draw.lines(
-                    self.screen, self.PARA_COLOR, False,
-                    [(para.x - 10, para.y), (para.x, para.y + 10), (para.x + 10, para.y)], 2
+                    self.screen,
+                    self.PARA_COLOR,
+                    False,
+                    [(para.x - 10, para.y), (para.x, para.y + 10), (para.x + 10, para.y)],
+                    2,
                 )
 
             # Draw paratrooper body
             pygame.draw.circle(self.screen, self.PARA_COLOR, (int(para.x), int(para.y + 10)), 5)
             pygame.draw.line(
-                self.screen, self.PARA_COLOR,
-                (para.x, para.y + 10), (para.x, para.y + 20), 2
+                self.screen, self.PARA_COLOR, (para.x, para.y + 10), (para.x, para.y + 20), 2
             )
 
     def _draw_bullets(self) -> None:
         """Draw all bullets"""
         for bullet in self.bullets:
             if bullet.alive:
-                pygame.draw.circle(self.screen, self.BULLET_COLOR,
-                                   (int(bullet.x), int(bullet.y)), 3)
+                pygame.draw.circle(
+                    self.screen, self.BULLET_COLOR, (int(bullet.x), int(bullet.y)), 3
+                )
 
     def _draw_ui(self) -> None:
         """Draw UI elements"""
-        self.score_display.draw(
-            self.screen, f"Score: {self.score}",
-            (10, 10), self.TEXT_COLOR
-        )
+        self.score_display.draw(self.screen, f"Score: {self.score}", (10, 10), self.TEXT_COLOR)
 
         wave_text = self.small_font.render(f"Wave: {self.wave}", True, self.TEXT_COLOR)
         self.screen.blit(wave_text, (10, 50))
 
         controls_text = self.small_font.render(
-            "Left/Right: Aim | Space: Shoot | ESC: Quit",
-            True, self.TEXT_COLOR
+            "Left/Right: Aim | Space: Shoot | ESC: Quit", True, self.TEXT_COLOR
         )
         self.screen.blit(controls_text, (self.WINDOW_WIDTH - 400, 10))
 
@@ -432,7 +447,7 @@ class ParatrooperGame(BaseGame):
             subtitle=f"Final Score: {self.score} | Waves: {self.wave - 1}",
             instructions="Press SPACE to restart or ESC to quit",
             title_color=self.GAME_OVER_COLOR,
-            text_color=BLACK
+            text_color=BLACK,
         )
 
     def run(self) -> None:

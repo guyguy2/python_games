@@ -4,6 +4,7 @@ Main entry point for Python Game Launcher
 This launches the game selection GUI where users can choose and play
 different classic arcade games.
 """
+
 import sys
 from pathlib import Path
 
