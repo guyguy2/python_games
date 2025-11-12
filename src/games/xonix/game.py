@@ -8,6 +8,7 @@ import random
 import pygame
 
 from common.constants import BLACK, GREEN, RED, WHITE, YELLOW
+from common.high_scores import get_high_score_manager
 from common.ui import GameOverlay, ScoreDisplay
 from games.base_game import BaseGame
 
@@ -67,6 +68,7 @@ class XonixGame(BaseGame):
         self.small_font: pygame.font.Font | None = None
         self.overlay: GameOverlay | None = None
         self.score_display: ScoreDisplay | None = None
+        self.high_score_manager = get_high_score_manager()
 
         # Game state
         self.grid: list[list[int]] = []
@@ -79,7 +81,10 @@ class XonixGame(BaseGame):
         self.running: bool = True
         self.game_over: bool = False
         self.game_won: bool = False
+        self.paused: bool = False
         self.message: str = ""
+        self.is_new_high_score: bool = False
+        self.score_saved: bool = False
 
     def initialize_display(self) -> None:
         """Initialize pygame display and fonts"""
@@ -124,6 +129,8 @@ class XonixGame(BaseGame):
         self.game_over = False
         self.game_won = False
         self.message = ""
+        self.is_new_high_score = False
+        self.score_saved = False
 
     def get_cell_state(self, x: int, y: int) -> int:
         """Get state of cell at position"""
@@ -192,6 +199,14 @@ class XonixGame(BaseGame):
         )
         return (claimed / total) * 100 if total > 0 else 0.0
 
+    def save_high_score(self) -> None:
+        """Save the current score to high scores"""
+        if not self.score_saved:
+            self.is_new_high_score = self.high_score_manager.add_score(
+                self.GAME_NAME, self.score
+            )
+            self.score_saved = True
+
     def handle_input(self, event: pygame.event.Event) -> None:
         """Handle keyboard input"""
         if event.type == pygame.QUIT:
@@ -199,12 +214,14 @@ class XonixGame(BaseGame):
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.running = False
+            elif event.key == pygame.K_p and not self.game_over and not self.game_won:
+                self.paused = not self.paused
             elif (self.game_over or self.game_won) and event.key == pygame.K_SPACE:
                 self.reset_game_state()
 
     def handle_movement(self, keys) -> None:
         """Handle player movement"""
-        if self.game_over or self.game_won:
+        if self.game_over or self.game_won or self.paused:
             return
 
         new_x, new_y = self.player_x, self.player_y
@@ -240,6 +257,7 @@ class XonixGame(BaseGame):
         elif self.drawing and (new_x, new_y) in self.trail:
             self.game_over = True
             self.message = "Hit your own trail!"
+            self.save_high_score()
 
         # Complete trail
         elif self.drawing and self.is_on_border_or_claimed(new_x, new_y):
@@ -251,6 +269,7 @@ class XonixGame(BaseGame):
             if self.score >= self.TARGET_PERCENTAGE:
                 self.game_won = True
                 self.message = "Victory!"
+                self.save_high_score()
 
         # Continue drawing
         elif self.drawing and cell_state == self.EMPTY:
@@ -298,12 +317,14 @@ class XonixGame(BaseGame):
             if self.drawing and self._enemy_hits_trail(enemy):
                 self.game_over = True
                 self.message = "Enemy hit your trail!"
+                self.save_high_score()
                 break
 
             # Check collision with player
             if self.drawing and self._enemy_hits_player(enemy):
                 self.game_over = True
                 self.message = "Enemy hit you!"
+                self.save_high_score()
 
     def _enemy_hits_trail(self, enemy: Enemy) -> bool:
         """Check if enemy collides with trail"""
@@ -331,6 +352,8 @@ class XonixGame(BaseGame):
 
         if self.game_over or self.game_won:
             self._draw_game_end()
+        elif self.paused:
+            self._draw_pause_overlay()
 
     def _draw_grid(self) -> None:
         """Draw the grid with claimed and border cells"""
@@ -380,8 +403,16 @@ class XonixGame(BaseGame):
         )
         self.screen.blit(target_text, (300, self.GRID_HEIGHT * self.GRID_SIZE + 15))
 
+        # Display high score
+        best_score = self.high_score_manager.get_best_score(self.GAME_NAME)
+        if best_score is not None:
+            high_score_text = self.small_font.render(
+                f"Best: {best_score:.1f}%", True, self.TEXT_COLOR
+            )
+            self.screen.blit(high_score_text, (450, self.GRID_HEIGHT * self.GRID_SIZE + 15))
+
         controls_text = self.small_font.render(
-            "Arrow keys to move | ESC to quit", True, self.TEXT_COLOR
+            "Arrow keys to move | P to pause | ESC to quit", True, self.TEXT_COLOR
         )
         self.screen.blit(
             controls_text, (self.WINDOW_WIDTH - 350, self.GRID_HEIGHT * self.GRID_SIZE + 15)
@@ -392,11 +423,26 @@ class XonixGame(BaseGame):
         percentage = self.calculate_percentage()
         color = self.WIN_COLOR if self.game_won else self.GAME_OVER_COLOR
 
+        subtitle = f"Territory Claimed: {percentage:.1f}%"
+        if self.is_new_high_score:
+            subtitle += " - NEW HIGH SCORE!"
+
         self.overlay.draw_overlay(
             title=self.message,
-            subtitle=f"Territory Claimed: {percentage:.1f}%",
+            subtitle=subtitle,
             instructions="Press SPACE to restart or ESC to quit",
             title_color=color,
+            text_color=self.TEXT_COLOR,
+        )
+
+    def _draw_pause_overlay(self) -> None:
+        """Draw pause overlay"""
+        percentage = self.calculate_percentage()
+        self.overlay.draw_overlay(
+            title="PAUSED",
+            subtitle=f"Territory: {percentage:.1f}%",
+            instructions="Press P to resume or ESC to quit",
+            title_color=YELLOW,
             text_color=self.TEXT_COLOR,
         )
 
@@ -415,7 +461,7 @@ class XonixGame(BaseGame):
             self.handle_movement(keys)
 
             # Update enemies
-            if not self.game_over and not self.game_won:
+            if not self.game_over and not self.game_won and not self.paused:
                 self.update_enemies()
 
             # Draw everything
