@@ -1,5 +1,7 @@
 """Tests for the BaseGame abstract class"""
+
 import pytest
+
 from games.base_game import BaseGame
 
 
@@ -32,9 +34,9 @@ def test_base_game_cannot_be_instantiated():
 def test_concrete_game_has_required_properties():
     """Test that concrete implementation has all required properties"""
     game = ConcreteGame()
-    assert hasattr(game, 'name')
-    assert hasattr(game, 'description')
-    assert hasattr(game, 'run')
+    assert hasattr(game, "name")
+    assert hasattr(game, "description")
+    assert hasattr(game, "run")
 
 
 def test_concrete_game_properties():
@@ -56,6 +58,7 @@ def test_concrete_game_run_method():
 def test_incomplete_implementation_fails():
     """Test that incomplete implementation raises TypeError"""
     with pytest.raises(TypeError):
+
         class IncompleteGame(BaseGame):
             pass
 

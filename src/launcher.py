@@ -1,14 +1,16 @@
 """
 Python Game Launcher - Main GUI
 """
-import pygame
+
 import sys
-from typing import List, Tuple, Type, Dict
+
+import pygame
+
+from common.constants import DARK_BG, DARK_BUTTON, DARK_BUTTON_HOVER, DEFAULT_FPS, LIGHT_TEXT, WHITE
+from games.base_game import BaseGame
+from games.paratrooper import ParatrooperGame
 from games.snake import SnakeGame
 from games.xonix import XonixGame
-from games.paratrooper import ParatrooperGame
-from games.base_game import BaseGame
-from common.constants import DARK_BG, DARK_BUTTON, DARK_BUTTON_HOVER, WHITE, LIGHT_TEXT, DEFAULT_FPS
 
 
 class GameLauncher:
@@ -45,14 +47,10 @@ class GameLauncher:
         self.desc_font = pygame.font.Font(None, 24)
 
         # Games list - using class references, not instances
-        self.games: List[Type[BaseGame]] = [
-            SnakeGame,
-            XonixGame,
-            ParatrooperGame
-        ]
+        self.games: list[type[BaseGame]] = [SnakeGame, XonixGame, ParatrooperGame]
 
         # Button rectangles
-        self.buttons: List[Dict] = []
+        self.buttons: list[dict] = []
         self.setup_buttons()
 
         self.clock = pygame.time.Clock()
@@ -72,16 +70,18 @@ class GameLauncher:
                 button_x,
                 self.BUTTON_START_Y + i * self.BUTTON_SPACING,
                 self.BUTTON_WIDTH,
-                self.BUTTON_HEIGHT
+                self.BUTTON_HEIGHT,
             )
-            self.buttons.append({
-                'rect': button_rect,
-                'game': game_class,
-                'name': game_class.GAME_NAME,
-                'description': game_class.GAME_DESCRIPTION
-            })
+            self.buttons.append(
+                {
+                    "rect": button_rect,
+                    "game": game_class,
+                    "name": game_class.GAME_NAME,
+                    "description": game_class.GAME_DESCRIPTION,
+                }
+            )
 
-    def draw(self, mouse_pos: Tuple[int, int]) -> None:
+    def draw(self, mouse_pos: tuple[int, int]) -> None:
         """Draw the launcher interface"""
         self.screen.fill(self.BG_COLOR)
 
@@ -99,38 +99,34 @@ class GameLauncher:
         for button in self.buttons:
             self._draw_button(button, mouse_pos)
 
-    def _draw_button(self, button: Dict, mouse_pos: Tuple[int, int]) -> None:
+    def _draw_button(self, button: dict, mouse_pos: tuple[int, int]) -> None:
         """Draw a single game button"""
         # Check if mouse is hovering
-        is_hover = button['rect'].collidepoint(mouse_pos)
+        is_hover = button["rect"].collidepoint(mouse_pos)
         button_color = self.BUTTON_HOVER_COLOR if is_hover else self.BUTTON_COLOR
 
         # Draw button background
-        pygame.draw.rect(self.screen, button_color, button['rect'], border_radius=10)
-        pygame.draw.rect(self.screen, self.BUTTON_TEXT_COLOR, button['rect'], 2, border_radius=10)
+        pygame.draw.rect(self.screen, button_color, button["rect"], border_radius=10)
+        pygame.draw.rect(self.screen, self.BUTTON_TEXT_COLOR, button["rect"], 2, border_radius=10)
 
         # Draw game name
-        name_text = self.button_font.render(button['name'], True, self.BUTTON_TEXT_COLOR)
-        name_rect = name_text.get_rect(
-            center=(button['rect'].centerx, button['rect'].centery - 15)
-        )
+        name_text = self.button_font.render(button["name"], True, self.BUTTON_TEXT_COLOR)
+        name_rect = name_text.get_rect(center=(button["rect"].centerx, button["rect"].centery - 15))
         self.screen.blit(name_text, name_rect)
 
         # Draw game description
-        desc_text = self.desc_font.render(button['description'], True, self.DESC_COLOR)
-        desc_rect = desc_text.get_rect(
-            center=(button['rect'].centerx, button['rect'].centery + 15)
-        )
+        desc_text = self.desc_font.render(button["description"], True, self.DESC_COLOR)
+        desc_rect = desc_text.get_rect(center=(button["rect"].centerx, button["rect"].centery + 15))
         self.screen.blit(desc_text, desc_rect)
 
-    def handle_click(self, pos: Tuple[int, int]) -> None:
+    def handle_click(self, pos: tuple[int, int]) -> None:
         """Handle mouse click on buttons"""
         for button in self.buttons:
-            if button['rect'].collidepoint(pos):
-                self.launch_game(button['game'])
+            if button["rect"].collidepoint(pos):
+                self.launch_game(button["game"])
                 break
 
-    def launch_game(self, game_class: Type[BaseGame]) -> None:
+    def launch_game(self, game_class: type[BaseGame]) -> None:
         """Launch a game"""
         # Clear the screen before launching
         self.screen.fill(self.BG_COLOR)

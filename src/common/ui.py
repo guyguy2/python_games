@@ -1,6 +1,7 @@
 """Shared UI components for games"""
+
 import pygame
-from typing import Tuple, Optional
+
 from .constants import BLACK, WHITE, Color
 
 
@@ -18,7 +19,7 @@ class GameOverlay:
         subtitle: str,
         instructions: str,
         title_color: Color = (255, 100, 100),
-        text_color: Color = WHITE
+        text_color: Color = WHITE,
     ) -> None:
         """Draw a semi-transparent overlay with text"""
         width, height = self.screen.get_size()
@@ -52,11 +53,7 @@ class ScoreDisplay:
         self.font = pygame.font.Font(None, font_size)
 
     def draw(
-        self,
-        screen: pygame.Surface,
-        text: str,
-        position: Tuple[int, int],
-        color: Color = WHITE
+        self, screen: pygame.Surface, text: str, position: tuple[int, int], color: Color = WHITE
     ) -> None:
         """Draw score text at specified position"""
         score_text = self.font.render(text, True, color)

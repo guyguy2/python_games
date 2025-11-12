@@ -2,12 +2,14 @@
 Classic Snake Game
 Control the snake to eat food and grow longer without hitting walls or yourself
 """
-import pygame
+
 import random
-from typing import List, Tuple, Optional
-from games.base_game import BaseGame
-from common.constants import BLACK, WHITE, RED, GREEN, DEFAULT_FPS
+
+import pygame
+
+from common.constants import BLACK, GREEN, RED, WHITE
 from common.ui import GameOverlay, ScoreDisplay
+from games.base_game import BaseGame
 
 
 class SnakeGame(BaseGame):
@@ -46,22 +48,23 @@ class SnakeGame(BaseGame):
 
     def __init__(self):
         """Initialize the snake game"""
-        self.screen: Optional[pygame.Surface] = None
-        self.clock: Optional[pygame.time.Clock] = None
-        self.font: Optional[pygame.font.Font] = None
-        self.small_font: Optional[pygame.font.Font] = None
-        self.overlay: Optional[GameOverlay] = None
-        self.score_display: Optional[ScoreDisplay] = None
+        self.screen: pygame.Surface | None = None
+        self.clock: pygame.time.Clock | None = None
+        self.font: pygame.font.Font | None = None
+        self.small_font: pygame.font.Font | None = None
+        self.overlay: GameOverlay | None = None
+        self.score_display: ScoreDisplay | None = None
 
         # Game state
-        self.snake: List[Tuple[int, int]] = []
-        self.direction: Tuple[int, int] = self.RIGHT
-        self.next_direction: Tuple[int, int] = self.RIGHT
-        self.food: Optional[Tuple[int, int]] = None
+        self.snake: list[tuple[int, int]] = []
+        self.direction: tuple[int, int] = self.RIGHT
+        self.next_direction: tuple[int, int] = self.RIGHT
+        self.food: tuple[int, int] | None = None
         self.score: int = 0
         self.speed: int = self.INITIAL_SPEED
         self.running: bool = True
         self.game_over: bool = False
+        self.paused: bool = False
 
     def initialize_display(self) -> None:
         """Initialize pygame display and fonts"""
@@ -84,13 +87,10 @@ class SnakeGame(BaseGame):
         self.speed = self.INITIAL_SPEED
         self.food = self.spawn_food()
 
-    def spawn_food(self) -> Tuple[int, int]:
+    def spawn_food(self) -> tuple[int, int]:
         """Spawn food at random location not on snake"""
         while True:
-            pos = (
-                random.randint(0, self.GRID_WIDTH - 1),
-                random.randint(0, self.GRID_HEIGHT - 1)
-            )
+            pos = (random.randint(0, self.GRID_WIDTH - 1), random.randint(0, self.GRID_HEIGHT - 1))
             if pos not in self.snake:
                 return pos
 
@@ -101,9 +101,11 @@ class SnakeGame(BaseGame):
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.running = False
-            elif not self.game_over:
+            elif event.key == pygame.K_p and not self.game_over:
+                self.paused = not self.paused
+            elif not self.game_over and not self.paused:
                 self._handle_direction_input(event.key)
-            elif event.key == pygame.K_SPACE:
+            elif self.game_over and event.key == pygame.K_SPACE:
                 self.reset_game_state()
 
     def _handle_direction_input(self, key: int) -> None:
@@ -122,7 +124,7 @@ class SnakeGame(BaseGame):
 
     def update_game_state(self) -> None:
         """Update game state for one frame"""
-        if self.game_over:
+        if self.game_over or self.paused:
             return
 
         self.direction = self.next_direction
@@ -146,20 +148,15 @@ class SnakeGame(BaseGame):
             # Remove tail if not eating
             self.snake.pop()
 
-    def _check_collision(self, pos: Tuple[int, int]) -> bool:
+    def _check_collision(self, pos: tuple[int, int]) -> bool:
         """Check if position collides with walls or snake body"""
         x, y = pos
-        return (
-            x < 0 or x >= self.GRID_WIDTH or
-            y < 0 or y >= self.GRID_HEIGHT or
-            pos in self.snake
-        )
+        return x < 0 or x >= self.GRID_WIDTH or y < 0 or y >= self.GRID_HEIGHT or pos in self.snake
 
     def _increase_speed(self) -> None:
         """Increase game speed based on score"""
         self.speed = min(
-            self.INITIAL_SPEED + self.score // self.SPEED_INCREASE_THRESHOLD,
-            self.MAX_SPEED
+            self.INITIAL_SPEED + self.score // self.SPEED_INCREASE_THRESHOLD, self.MAX_SPEED
         )
 
     def draw_game(self) -> None:
@@ -172,21 +169,26 @@ class SnakeGame(BaseGame):
 
         if self.game_over:
             self._draw_game_over()
+        elif self.paused:
+            self._draw_pause_overlay()
 
     def _draw_grid(self) -> None:
         """Draw the game grid"""
         for x in range(self.GRID_WIDTH):
             for y in range(self.GRID_HEIGHT):
-                rect = pygame.Rect(x * self.GRID_SIZE, y * self.GRID_SIZE,
-                                   self.GRID_SIZE, self.GRID_SIZE)
+                rect = pygame.Rect(
+                    x * self.GRID_SIZE, y * self.GRID_SIZE, self.GRID_SIZE, self.GRID_SIZE
+                )
                 pygame.draw.rect(self.screen, self.GRID_COLOR, rect, 1)
 
     def _draw_snake(self) -> None:
         """Draw the snake"""
         for i, (x, y) in enumerate(self.snake):
             rect = pygame.Rect(
-                x * self.GRID_SIZE + 1, y * self.GRID_SIZE + 1,
-                self.GRID_SIZE - 2, self.GRID_SIZE - 2
+                x * self.GRID_SIZE + 1,
+                y * self.GRID_SIZE + 1,
+                self.GRID_SIZE - 2,
+                self.GRID_SIZE - 2,
             )
             color = self.SNAKE_HEAD_COLOR if i == 0 else self.SNAKE_COLOR
             pygame.draw.rect(self.screen, color, rect)
@@ -197,21 +199,23 @@ class SnakeGame(BaseGame):
             x, y = self.food
             center = (
                 x * self.GRID_SIZE + self.GRID_SIZE // 2,
-                y * self.GRID_SIZE + self.GRID_SIZE // 2
+                y * self.GRID_SIZE + self.GRID_SIZE // 2,
             )
-            pygame.draw.circle(self.screen, self.FOOD_COLOR, center,
-                               self.GRID_SIZE // 2 - 2)
+            pygame.draw.circle(self.screen, self.FOOD_COLOR, center, self.GRID_SIZE // 2 - 2)
 
     def _draw_ui(self) -> None:
         """Draw score and game info"""
         self.score_display.draw(
-            self.screen, f"Score: {self.score}",
+            self.screen,
+            f"Score: {self.score}",
             (10, self.GRID_HEIGHT * self.GRID_SIZE + 10),
-            self.TEXT_COLOR
+            self.TEXT_COLOR,
         )
 
         length_text = self.small_font.render(f"Length: {len(self.snake)}", True, self.TEXT_COLOR)
-        self.screen.blit(length_text, (self.WINDOW_WIDTH - 150, self.GRID_HEIGHT * self.GRID_SIZE + 15))
+        self.screen.blit(
+            length_text, (self.WINDOW_WIDTH - 150, self.GRID_HEIGHT * self.GRID_SIZE + 15)
+        )
 
     def _draw_game_over(self) -> None:
         """Draw game over overlay"""
@@ -220,7 +224,17 @@ class SnakeGame(BaseGame):
             subtitle=f"Final Score: {self.score}",
             instructions="Press SPACE to restart or ESC to quit",
             title_color=self.GAME_OVER_COLOR,
-            text_color=self.TEXT_COLOR
+            text_color=self.TEXT_COLOR,
+        )
+
+    def _draw_pause_overlay(self) -> None:
+        """Draw pause overlay"""
+        self.overlay.draw_overlay(
+            title="PAUSED",
+            subtitle=f"Score: {self.score}",
+            instructions="Press P to resume or ESC to quit",
+            title_color=(255, 255, 0),  # Yellow
+            text_color=self.TEXT_COLOR,
         )
 
     def run(self) -> None:

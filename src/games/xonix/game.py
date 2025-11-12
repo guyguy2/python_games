@@ -2,12 +2,14 @@
 Xonix Game
 Claim territory by drawing lines while avoiding enemies
 """
-import pygame
+
 import random
-from typing import List, Tuple, Set, Optional
-from games.base_game import BaseGame
-from common.constants import BLACK, WHITE, RED, GREEN, YELLOW
+
+import pygame
+
+from common.constants import BLACK, GREEN, RED, WHITE, YELLOW
 from common.ui import GameOverlay, ScoreDisplay
+from games.base_game import BaseGame
 
 
 class Enemy:
@@ -59,19 +61,19 @@ class XonixGame(BaseGame):
 
     def __init__(self):
         """Initialize the Xonix game"""
-        self.screen: Optional[pygame.Surface] = None
-        self.clock: Optional[pygame.time.Clock] = None
-        self.font: Optional[pygame.font.Font] = None
-        self.small_font: Optional[pygame.font.Font] = None
-        self.overlay: Optional[GameOverlay] = None
-        self.score_display: Optional[ScoreDisplay] = None
+        self.screen: pygame.Surface | None = None
+        self.clock: pygame.time.Clock | None = None
+        self.font: pygame.font.Font | None = None
+        self.small_font: pygame.font.Font | None = None
+        self.overlay: GameOverlay | None = None
+        self.score_display: ScoreDisplay | None = None
 
         # Game state
-        self.grid: List[List[int]] = []
+        self.grid: list[list[int]] = []
         self.player_x: int = 0
         self.player_y: int = 0
-        self.enemies: List[Enemy] = []
-        self.trail: List[Tuple[int, int]] = []
+        self.enemies: list[Enemy] = []
+        self.trail: list[tuple[int, int]] = []
         self.drawing: bool = False
         self.score: float = 0.0
         self.running: bool = True
@@ -93,8 +95,7 @@ class XonixGame(BaseGame):
     def reset_game_state(self) -> None:
         """Reset game state to initial values"""
         # Create grid with borders
-        self.grid = [[self.EMPTY for _ in range(self.GRID_WIDTH)]
-                     for _ in range(self.GRID_HEIGHT)]
+        self.grid = [[self.EMPTY for _ in range(self.GRID_WIDTH)] for _ in range(self.GRID_HEIGHT)]
 
         # Create border
         for x in range(self.GRID_WIDTH):
@@ -135,9 +136,9 @@ class XonixGame(BaseGame):
         state = self.get_cell_state(x, y)
         return state in [self.BORDER, self.CLAIMED]
 
-    def flood_fill(self, start_x: int, start_y: int) -> Tuple[List[Tuple[int, int]], bool]:
+    def flood_fill(self, start_x: int, start_y: int) -> tuple[list[tuple[int, int]], bool]:
         """Flood fill to find unclaimed area and check if enemies are present"""
-        visited: Set[Tuple[int, int]] = set()
+        visited: set[tuple[int, int]] = set()
         stack = [(start_x, start_y)]
         area = []
 
@@ -184,7 +185,8 @@ class XonixGame(BaseGame):
         """Calculate percentage of claimed territory"""
         total = (self.GRID_WIDTH - 2) * (self.GRID_HEIGHT - 2)
         claimed = sum(
-            1 for y in range(1, self.GRID_HEIGHT - 1)
+            1
+            for y in range(1, self.GRID_HEIGHT - 1)
             for x in range(1, self.GRID_WIDTH - 1)
             if self.grid[y][x] in [self.CLAIMED, self.BORDER]
         )
@@ -268,15 +270,27 @@ class XonixGame(BaseGame):
             ex, ey = int(enemy.x // self.GRID_SIZE), int(enemy.y // self.GRID_SIZE)
 
             # Bounce off walls and claimed territory
-            if (enemy.x <= enemy.radius or enemy.x >= self.WINDOW_WIDTH - enemy.radius or
-                (0 <= ex < self.GRID_WIDTH and 0 <= ey < self.GRID_HEIGHT and
-                 self.grid[ey][ex] in [self.BORDER, self.CLAIMED])):
+            if (
+                enemy.x <= enemy.radius
+                or enemy.x >= self.WINDOW_WIDTH - enemy.radius
+                or (
+                    0 <= ex < self.GRID_WIDTH
+                    and 0 <= ey < self.GRID_HEIGHT
+                    and self.grid[ey][ex] in [self.BORDER, self.CLAIMED]
+                )
+            ):
                 enemy.vx = -enemy.vx
                 enemy.x += enemy.vx * 2
 
-            if (enemy.y <= enemy.radius or enemy.y >= self.GRID_HEIGHT * self.GRID_SIZE - enemy.radius or
-                (0 <= ex < self.GRID_WIDTH and 0 <= ey < self.GRID_HEIGHT and
-                 self.grid[ey][ex] in [self.BORDER, self.CLAIMED])):
+            if (
+                enemy.y <= enemy.radius
+                or enemy.y >= self.GRID_HEIGHT * self.GRID_SIZE - enemy.radius
+                or (
+                    0 <= ex < self.GRID_WIDTH
+                    and 0 <= ey < self.GRID_HEIGHT
+                    and self.grid[ey][ex] in [self.BORDER, self.CLAIMED]
+                )
+            ):
                 enemy.vy = -enemy.vy
                 enemy.y += enemy.vy * 2
 
@@ -322,8 +336,9 @@ class XonixGame(BaseGame):
         """Draw the grid with claimed and border cells"""
         for y in range(self.GRID_HEIGHT):
             for x in range(self.GRID_WIDTH):
-                rect = pygame.Rect(x * self.GRID_SIZE, y * self.GRID_SIZE,
-                                   self.GRID_SIZE, self.GRID_SIZE)
+                rect = pygame.Rect(
+                    x * self.GRID_SIZE, y * self.GRID_SIZE, self.GRID_SIZE, self.GRID_SIZE
+                )
                 if self.grid[y][x] == self.CLAIMED:
                     pygame.draw.rect(self.screen, self.CLAIMED_COLOR, rect)
                 elif self.grid[y][x] == self.BORDER:
@@ -332,15 +347,17 @@ class XonixGame(BaseGame):
     def _draw_trail(self) -> None:
         """Draw the player's trail"""
         for x, y in self.trail:
-            rect = pygame.Rect(x * self.GRID_SIZE, y * self.GRID_SIZE,
-                               self.GRID_SIZE, self.GRID_SIZE)
+            rect = pygame.Rect(
+                x * self.GRID_SIZE, y * self.GRID_SIZE, self.GRID_SIZE, self.GRID_SIZE
+            )
             pygame.draw.rect(self.screen, self.TRAIL_COLOR, rect)
 
     def _draw_enemies(self) -> None:
         """Draw enemies"""
         for enemy in self.enemies:
-            pygame.draw.circle(self.screen, self.ENEMY_COLOR,
-                               (int(enemy.x), int(enemy.y)), enemy.radius)
+            pygame.draw.circle(
+                self.screen, self.ENEMY_COLOR, (int(enemy.x), int(enemy.y)), enemy.radius
+            )
 
     def _draw_player(self) -> None:
         """Draw player"""
@@ -352,16 +369,23 @@ class XonixGame(BaseGame):
         """Draw UI elements"""
         percentage = self.calculate_percentage()
         self.score_display.draw(
-            self.screen, f"Territory: {percentage:.1f}%",
+            self.screen,
+            f"Territory: {percentage:.1f}%",
             (10, self.GRID_HEIGHT * self.GRID_SIZE + 10),
-            self.TEXT_COLOR
+            self.TEXT_COLOR,
         )
 
-        target_text = self.small_font.render(f"Target: {self.TARGET_PERCENTAGE:.0f}%", True, self.TEXT_COLOR)
+        target_text = self.small_font.render(
+            f"Target: {self.TARGET_PERCENTAGE:.0f}%", True, self.TEXT_COLOR
+        )
         self.screen.blit(target_text, (300, self.GRID_HEIGHT * self.GRID_SIZE + 15))
 
-        controls_text = self.small_font.render("Arrow keys to move | ESC to quit", True, self.TEXT_COLOR)
-        self.screen.blit(controls_text, (self.WINDOW_WIDTH - 350, self.GRID_HEIGHT * self.GRID_SIZE + 15))
+        controls_text = self.small_font.render(
+            "Arrow keys to move | ESC to quit", True, self.TEXT_COLOR
+        )
+        self.screen.blit(
+            controls_text, (self.WINDOW_WIDTH - 350, self.GRID_HEIGHT * self.GRID_SIZE + 15)
+        )
 
     def _draw_game_end(self) -> None:
         """Draw game over or victory overlay"""
@@ -373,7 +397,7 @@ class XonixGame(BaseGame):
             subtitle=f"Territory Claimed: {percentage:.1f}%",
             instructions="Press SPACE to restart or ESC to quit",
             title_color=color,
-            text_color=self.TEXT_COLOR
+            text_color=self.TEXT_COLOR,
         )
 
     def run(self) -> None:
