@@ -1,5 +1,6 @@
 """Sound effects and background music manager"""
 
+import contextlib
 from pathlib import Path
 
 import pygame
@@ -122,20 +123,16 @@ class SoundManager:
         if not self.mixer_available:
             return
 
-        try:
+        with contextlib.suppress(pygame.error):
             pygame.mixer.music.pause()
-        except pygame.error:
-            pass
 
     def resume_music(self) -> None:
         """Resume background music"""
         if not self.mixer_available:
             return
 
-        try:
+        with contextlib.suppress(pygame.error):
             pygame.mixer.music.unpause()
-        except pygame.error:
-            pass
 
     def set_volume(self, volume: float) -> None:
         """
@@ -154,10 +151,8 @@ class SoundManager:
             sound.set_volume(self.volume)
 
         # Update music volume
-        try:
+        with contextlib.suppress(pygame.error):
             pygame.mixer.music.set_volume(self.volume * 0.5)
-        except pygame.error:
-            pass
 
     def toggle_mute(self) -> bool:
         """

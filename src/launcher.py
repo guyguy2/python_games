@@ -151,9 +151,8 @@ class GameLauncher:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Left click
                         self.handle_click(event.pos)
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.running = False
 
             self.draw(mouse_pos)
             pygame.display.flip()

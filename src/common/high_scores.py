@@ -69,7 +69,9 @@ class HighScoreManager:
 
         # Sort by score (descending) and keep top 10
         self.scores[game_name].sort(key=lambda x: x["score"], reverse=True)
-        is_high_score = len(self.scores[game_name]) <= 10 or score_entry in self.scores[game_name][:10]
+        is_high_score = (
+            len(self.scores[game_name]) <= 10 or score_entry in self.scores[game_name][:10]
+        )
         self.scores[game_name] = self.scores[game_name][:10]
 
         # Save to disk
@@ -105,7 +107,8 @@ class HighScoreManager:
         """
         scores = self.get_high_scores(game_name, 1)
         if scores:
-            return scores[0]["score"]
+            score: int | float = scores[0]["score"]
+            return score
         return None
 
     def clear_scores(self, game_name: str) -> None:
