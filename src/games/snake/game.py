@@ -176,6 +176,7 @@ class SnakeGame(BaseGame):
 
     def draw_game(self) -> None:
         """Draw the game state"""
+        assert self.screen is not None
         self.screen.fill(self.BG_COLOR)
         self._draw_grid()
         self._draw_snake()
@@ -189,6 +190,7 @@ class SnakeGame(BaseGame):
 
     def _draw_grid(self) -> None:
         """Draw the game grid"""
+        assert self.screen is not None
         for x in range(self.GRID_WIDTH):
             for y in range(self.GRID_HEIGHT):
                 rect = pygame.Rect(
@@ -198,6 +200,7 @@ class SnakeGame(BaseGame):
 
     def _draw_snake(self) -> None:
         """Draw the snake"""
+        assert self.screen is not None
         for i, (x, y) in enumerate(self.snake):
             rect = pygame.Rect(
                 x * self.GRID_SIZE + 1,
@@ -210,6 +213,7 @@ class SnakeGame(BaseGame):
 
     def _draw_food(self) -> None:
         """Draw the food"""
+        assert self.screen is not None
         if self.food:
             x, y = self.food
             center = (
@@ -220,6 +224,9 @@ class SnakeGame(BaseGame):
 
     def _draw_ui(self) -> None:
         """Draw score and game info"""
+        assert self.screen is not None
+        assert self.score_display is not None
+        assert self.small_font is not None
         self.score_display.draw(
             self.screen,
             f"Score: {self.score}",
@@ -235,13 +242,12 @@ class SnakeGame(BaseGame):
         # Display high score
         best_score = self.high_score_manager.get_best_score(self.GAME_NAME)
         if best_score is not None:
-            high_score_text = self.small_font.render(
-                f"Best: {best_score}", True, self.TEXT_COLOR
-            )
+            high_score_text = self.small_font.render(f"Best: {best_score}", True, self.TEXT_COLOR)
             self.screen.blit(high_score_text, (250, self.GRID_HEIGHT * self.GRID_SIZE + 15))
 
     def _draw_game_over(self) -> None:
         """Draw game over overlay"""
+        assert self.overlay is not None
         subtitle = f"Final Score: {self.score}"
         if self.is_new_high_score:
             subtitle += " - NEW HIGH SCORE!"
@@ -256,6 +262,7 @@ class SnakeGame(BaseGame):
 
     def _draw_pause_overlay(self) -> None:
         """Draw pause overlay"""
+        assert self.overlay is not None
         self.overlay.draw_overlay(
             title="PAUSED",
             subtitle=f"Score: {self.score}",
@@ -269,6 +276,7 @@ class SnakeGame(BaseGame):
         self.initialize_display()
         self.reset_game_state()
 
+        assert self.clock is not None
         while self.running:
             # Event handling
             for event in pygame.event.get():

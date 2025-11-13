@@ -3,7 +3,7 @@ Comprehensive unit tests for Snake game logic
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock
 
 import pygame
 

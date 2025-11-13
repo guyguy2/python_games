@@ -196,7 +196,12 @@ class ParatrooperGame(BaseGame):
                 self.paused = not self.paused
             elif self.game_over and event.key == pygame.K_SPACE:
                 self.reset_game_state()
-            elif event.key == pygame.K_SPACE and self.turret_alive and self.shoot_cooldown <= 0 and not self.paused:
+            elif (
+                event.key == pygame.K_SPACE
+                and self.turret_alive
+                and self.shoot_cooldown <= 0
+                and not self.paused
+            ):
                 self._fire_bullet()
 
     def _fire_bullet(self) -> None:
@@ -339,6 +344,7 @@ class ParatrooperGame(BaseGame):
 
     def draw_game(self) -> None:
         """Draw the game state"""
+        assert self.screen is not None
         self.screen.fill(self.SKY_COLOR)
         self._draw_ground()
         self._draw_turret()
@@ -354,6 +360,7 @@ class ParatrooperGame(BaseGame):
 
     def _draw_ground(self) -> None:
         """Draw the ground"""
+        assert self.screen is not None
         pygame.draw.rect(
             self.screen,
             self.GROUND_COLOR,
@@ -362,6 +369,7 @@ class ParatrooperGame(BaseGame):
 
     def _draw_turret(self) -> None:
         """Draw the turret"""
+        assert self.screen is not None
         if self.turret_alive:
             # Draw turret base
             pygame.draw.circle(self.screen, self.TURRET_COLOR, (self.turret_x, self.turret_y), 20)
@@ -396,6 +404,7 @@ class ParatrooperGame(BaseGame):
 
     def _draw_helicopters(self) -> None:
         """Draw all helicopters"""
+        assert self.screen is not None
         for heli in self.helicopters:
             if not heli.alive:
                 continue
@@ -412,6 +421,7 @@ class ParatrooperGame(BaseGame):
 
     def _draw_paratroopers(self) -> None:
         """Draw all paratroopers"""
+        assert self.screen is not None
         for para in self.paratroopers:
             if not para.alive:
                 continue
@@ -442,6 +452,7 @@ class ParatrooperGame(BaseGame):
 
     def _draw_bullets(self) -> None:
         """Draw all bullets"""
+        assert self.screen is not None
         for bullet in self.bullets:
             if bullet.alive:
                 pygame.draw.circle(
@@ -450,6 +461,9 @@ class ParatrooperGame(BaseGame):
 
     def _draw_ui(self) -> None:
         """Draw UI elements"""
+        assert self.screen is not None
+        assert self.score_display is not None
+        assert self.small_font is not None
         self.score_display.draw(self.screen, f"Score: {self.score}", (10, 10), self.TEXT_COLOR)
 
         wave_text = self.small_font.render(f"Wave: {self.wave}", True, self.TEXT_COLOR)
@@ -458,9 +472,7 @@ class ParatrooperGame(BaseGame):
         # Display high score
         best_score = self.high_score_manager.get_best_score(self.GAME_NAME)
         if best_score is not None:
-            high_score_text = self.small_font.render(
-                f"Best: {best_score}", True, self.TEXT_COLOR
-            )
+            high_score_text = self.small_font.render(f"Best: {best_score}", True, self.TEXT_COLOR)
             self.screen.blit(high_score_text, (10, 80))
 
         controls_text = self.small_font.render(
@@ -470,6 +482,7 @@ class ParatrooperGame(BaseGame):
 
     def _draw_game_over(self) -> None:
         """Draw game over overlay"""
+        assert self.overlay is not None
         subtitle = f"Final Score: {self.score} | Waves: {self.wave - 1}"
         if self.is_new_high_score:
             subtitle += " - NEW HIGH SCORE!"
@@ -484,6 +497,7 @@ class ParatrooperGame(BaseGame):
 
     def _draw_pause_overlay(self) -> None:
         """Draw pause overlay"""
+        assert self.overlay is not None
         self.overlay.draw_overlay(
             title="PAUSED",
             subtitle=f"Score: {self.score} | Wave: {self.wave}",
@@ -497,6 +511,7 @@ class ParatrooperGame(BaseGame):
         self.initialize_display()
         self.reset_game_state()
 
+        assert self.clock is not None
         while self.running:
             # Event handling
             for event in pygame.event.get():

@@ -202,9 +202,7 @@ class XonixGame(BaseGame):
     def save_high_score(self) -> None:
         """Save the current score to high scores"""
         if not self.score_saved:
-            self.is_new_high_score = self.high_score_manager.add_score(
-                self.GAME_NAME, self.score
-            )
+            self.is_new_high_score = self.high_score_manager.add_score(self.GAME_NAME, self.score)
             self.score_saved = True
 
     def handle_input(self, event: pygame.event.Event) -> None:
@@ -343,6 +341,7 @@ class XonixGame(BaseGame):
 
     def draw_game(self) -> None:
         """Draw the game state"""
+        assert self.screen is not None
         self.screen.fill(self.BG_COLOR)
         self._draw_grid()
         self._draw_trail()
@@ -357,6 +356,7 @@ class XonixGame(BaseGame):
 
     def _draw_grid(self) -> None:
         """Draw the grid with claimed and border cells"""
+        assert self.screen is not None
         for y in range(self.GRID_HEIGHT):
             for x in range(self.GRID_WIDTH):
                 rect = pygame.Rect(
@@ -369,6 +369,7 @@ class XonixGame(BaseGame):
 
     def _draw_trail(self) -> None:
         """Draw the player's trail"""
+        assert self.screen is not None
         for x, y in self.trail:
             rect = pygame.Rect(
                 x * self.GRID_SIZE, y * self.GRID_SIZE, self.GRID_SIZE, self.GRID_SIZE
@@ -377,6 +378,7 @@ class XonixGame(BaseGame):
 
     def _draw_enemies(self) -> None:
         """Draw enemies"""
+        assert self.screen is not None
         for enemy in self.enemies:
             pygame.draw.circle(
                 self.screen, self.ENEMY_COLOR, (int(enemy.x), int(enemy.y)), enemy.radius
@@ -384,12 +386,16 @@ class XonixGame(BaseGame):
 
     def _draw_player(self) -> None:
         """Draw player"""
+        assert self.screen is not None
         px = self.player_x * self.GRID_SIZE + self.GRID_SIZE // 2
         py = self.player_y * self.GRID_SIZE + self.GRID_SIZE // 2
         pygame.draw.circle(self.screen, self.PLAYER_COLOR, (px, py), self.GRID_SIZE // 2)
 
     def _draw_ui(self) -> None:
         """Draw UI elements"""
+        assert self.screen is not None
+        assert self.score_display is not None
+        assert self.small_font is not None
         percentage = self.calculate_percentage()
         self.score_display.draw(
             self.screen,
@@ -420,6 +426,7 @@ class XonixGame(BaseGame):
 
     def _draw_game_end(self) -> None:
         """Draw game over or victory overlay"""
+        assert self.overlay is not None
         percentage = self.calculate_percentage()
         color = self.WIN_COLOR if self.game_won else self.GAME_OVER_COLOR
 
@@ -437,6 +444,7 @@ class XonixGame(BaseGame):
 
     def _draw_pause_overlay(self) -> None:
         """Draw pause overlay"""
+        assert self.overlay is not None
         percentage = self.calculate_percentage()
         self.overlay.draw_overlay(
             title="PAUSED",
@@ -451,6 +459,7 @@ class XonixGame(BaseGame):
         self.initialize_display()
         self.reset_game_state()
 
+        assert self.clock is not None
         while self.running:
             # Event handling
             for event in pygame.event.get():

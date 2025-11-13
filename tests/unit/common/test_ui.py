@@ -116,7 +116,7 @@ class TestScoreDisplay(unittest.TestCase):
     def test_initialization_custom_size(self, mock_font):
         """Test ScoreDisplay initializes with custom font size"""
         custom_size = 48
-        score_display = ScoreDisplay(font_size=custom_size)
+        _score_display = ScoreDisplay(font_size=custom_size)
 
         mock_font.assert_called_once_with(None, custom_size)
 
